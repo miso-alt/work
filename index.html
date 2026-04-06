@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MyWorkHub</title>
+<link rel="manifest" id="manifest-link">
+<meta name="theme-color" content="#FF8B94">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MyWorkHub">
+<link rel="apple-touch-icon" id="apple-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --coral:   #FF8B94;
+  --peach:   #FFAAA5;
+  --mint:    #A8D8B9;
+  --sky:     #A5C8E4;
+  --lavender:#C3AEE0;
+  --yellow:  #FFD3A5;
+  --bg:      #FFF8F5;
+  --card:    #FFFFFF;
+  --text:    #3D2C2C;
+  --sub:     #9B8585;
+  --border:  #F0E8E8;
+  --shadow:  rgba(255,139,148,0.15);
+  --r: 18px;
+  --tab-h: 72px;
+  --header-h: 60px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ═══ LAYOUT ═══ */
+#app { display: flex; flex-direction: column; height: 100dvh; }
+#header {
+  height: var(--header-h);
+  padding: 0 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--card);
+  border-bottom: 2px solid var(--border);
+  position: relative; z-index: 10;
+  flex-shrink: 0;
+}
+.header-title {
+  font-size: 20px; font-weight: 900;
+  background: linear-gradient(135deg, var(--coral), var(--lavender));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+.header-date { font-size: 12px; color: var(--sub); font-weight: 400; }
+
+#content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 16px calc(var(--tab-h) + 16px);
+}
+
+#tabs {
+  height: var(--tab-h);
+  background: var(--card);
+  border-top: 2px solid var(--border);
+  display: flex;
+  flex-shrink: 0;
+  position: relative; z-index: 10;
+}
+.tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; cursor: pointer; transition: all 0.2s;
+  color: var(--sub); font-size: 10px; font-weight: 500;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.tab .tab-icon {
+  width: 28px; height: 28px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+}
+.tab.active { color: var(--text); }
+.tab.active .tab-icon {
+  transform: scale(1.15);
+}
+.tab:nth-child(1).active .tab-icon { background: linear-gradient(135deg,var(--coral),var(--peach)); }
+.tab:nth-child(2).active .tab-icon { background: linear-gradient(135deg,var(--mint),#7EC8A0); }
+.tab:nth-child(3).active .tab-icon { background: linear-gradient(135deg,var(--lavender),#A98FCF); }
+.tab:nth-child(4).active .tab-icon { background: linear-gradient(135deg,var(--sky),#7BA8CC); }
+
+/* ═══ PAGES ═══ */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ═══ CARDS ═══ */
+.card {
+  background: var(--card);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 12px var(--shadow);
+  border: 1.5px solid var(--border);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.card:active { transform: scale(0.98); }
+
+/* ═══ SECTION HEADER ═══ */
+.sec-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.sec-title {
+  font-size: 18px; font-weight: 900; letter-spacing: -0.3px;
+}
+.sec-badge {
+  background: linear-gradient(135deg,var(--coral),var(--peach));
+  color: white; border-radius: 20px;
+  padding: 4px 12px; font-size: 12px; font-weight: 700;
+}
+
+/* ═══ ADD BUTTON ═══ */
+.fab {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--coral), var(--peach));
+  color: white; font-size: 24px; font-weight: 300;
+  box-shadow: 0 4px 16px var(--shadow);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+.fab:active { transform: scale(0.92); }
+
+.btn {
+  border: none; border-radius: 12px; padding: 10px 20px;
+  font-family: inherit; font-weight: 700; font-size: 13px;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-primary { background: linear-gradient(135deg,var(--coral),var(--peach)); color: white; }
+.btn-ghost {
+  background: var(--border); color: var(--sub);
+}
+.btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 8px; }
+.btn:active { transform: scale(0.95); }
+
+/* ═══ FILTER CHIPS ═══ */
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  border: 1.5px solid var(--border); background: var(--card);
+  border-radius: 20px; padding: 5px 14px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: all 0.15s;
+  color: var(--sub);
+}
+.chip.active { border-color: var(--coral); background: var(--coral); color: white; }
+
+/* ═══ TASK ITEM ═══ */
+.task-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px; background: var(--card);
+  border-radius: 14px; margin-bottom: 8px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  border: 1.5px solid var(--border);
+  transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+.task-item::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px; border-radius: 0 4px 4px 0;
+}
+.task-item.pri-高::before { background: var(--coral); }
+.task-item.pri-中::before { background: var(--yellow); }
+.task-item.pri-低::before { background: var(--mint); }
+.task-item.done { opacity: 0.5; }
+.task-item.done .task-name { text-decoration: line-through; color: var(--sub); }
+
+.task-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--border); background: white;
+  flex-shrink: 0; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; margin-top: 1px;
+}
+.task-check.checked { background: var(--mint); border-color: var(--mint); }
+
+.task-body { flex: 1; min-width: 0; }
+.task-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.task-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.tag {
+  border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600;
+}
+.tag-pri-高 { background: #FFE5E7; color: var(--coral); }
+.tag-pri-中 { background: #FFF4E0; color: #E8A44A; }
+.tag-pri-低 { background: #E5F5EC; color: #4CAF72; }
+.tag-status { background: var(--bg); color: var(--sub); border: 1px solid var(--border); }
+.tag-date { background: var(--bg); color: var(--sub); font-size: 10px; }
+.tag-cat { background: #EAE5F5; color: var(--lavender); }
+
+.task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.icon-btn {
+  width: 30px; height: 30px; border-radius: 8px; border: none;
+  background: var(--bg); cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.icon-btn:active { transform: scale(0.9); }
+
+/* ═══ GOAL ITEM ═══ */
+.goal-card {
+  background: var(--card); border-radius: var(--r); padding: 16px;
+  margin-bottom: 10px; border: 1.5px solid var(--border);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.goal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.goal-title { font-size: 16px; font-weight: 800; }
+.goal-meta { font-size: 11px; color: var(--sub); margin-top: 3px; }
+.progress-wrap { margin-bottom: 8px; }
+.progress-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+.progress-bar { height: 8px; background: var(--border); border-radius: 10px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
+.goal-color-0 .progress-fill { background: linear-gradient(90deg,var(--coral),var(--peach)); }
+.goal-color-1 .progress-fill { background: linear-gradient(90deg,var(--mint),#7EC8A0); }
+.goal-color-2 .progress-fill { background: linear-gradient(90deg,var(--lavender),#A98FCF); }
+.goal-color-3 .progress-fill { background: linear-gradient(90deg,var(--sky),#7BA8CC); }
+.goal-color-4 .progress-fill { background: linear-gradient(90deg,var(--yellow),#F5B84A); }
+
+.milestones { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
+.milestone-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; padding: 4px 0; cursor: pointer;
+}
+.milestone-dot {
+  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid var(--border); background: white; transition: all 0.2s;
+}
+.milestone-dot.done { background: var(--mint); border-color: var(--mint); }
+.milestone-text.done { text-decoration: line-through; color: var(--sub); }
+
+/* ═══ NETWORK / 人脈 ═══ */
+.contact-card {
+  background: var(--card); border-radius: var(--r); padding: 14px;
+  margin-bottom: 10px; border: 1.5px solid var(--border);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.contact-avatar {
+  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 900; color: white;
+}
+.avatar-0 { background: linear-gradient(135deg,var(--coral),var(--peach)); }
+.avatar-1 { background: linear-gradient(135deg,var(--mint),#7EC8A0); }
+.avatar-2 { background: linear-gradient(135deg,var(--lavender),#A98FCF); }
+.avatar-3 { background: linear-gradient(135deg,var(--sky),#7BA8CC); }
+.avatar-4 { background: linear-gradient(135deg,var(--yellow),#E8A44A); }
+
+.contact-body { flex: 1; min-width: 0; }
+.contact-name { font-size: 15px; font-weight: 800; }
+.contact-role { font-size: 12px; color: var(--sub); margin-bottom: 6px; }
+.contact-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+.contact-last { font-size: 11px; color: var(--sub); }
+.contact-last span { color: var(--coral); font-weight: 700; }
+
+.follow-badge {
+  background: #FFE5E7; color: var(--coral); border-radius: 8px;
+  padding: 3px 8px; font-size: 10px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 3px;
+}
+
+/* ═══ DASHBOARD ═══ */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-card {
+  background: var(--card); border-radius: var(--r); padding: 16px;
+  border: 1.5px solid var(--border);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.stat-icon { font-size: 22px; margin-bottom: 8px; }
+.stat-val { font-size: 28px; font-weight: 900; letter-spacing: -1px; }
+.stat-label { font-size: 11px; color: var(--sub); font-weight: 500; margin-top: 2px; }
+.stat-coral .stat-val { color: var(--coral); }
+.stat-mint .stat-val { color: #4CAF72; }
+.stat-lavender .stat-val { color: var(--lavender); }
+.stat-sky .stat-val { color: var(--sky); }
+
+.today-section { margin-bottom: 14px; }
+.today-title { font-size: 13px; font-weight: 700; color: var(--sub); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ═══ MODAL ═══ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(61,44,44,0.4); backdrop-filter: blur(4px);
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  width: 100%; background: var(--card);
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px calc(32px + env(safe-area-inset-bottom,0));
+  max-height: 92vh; overflow-y: auto;
+  transform: translateY(100%); transition: transform 0.3s cubic-bezier(.34,1.1,.64,1);
+}
+.modal-overlay.open .modal-box { transform: translateY(0); }
+.modal-title {
+  font-size: 18px; font-weight: 900; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-close {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: var(--border); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ═══ FORM ═══ */
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 12px; font-weight: 700; color: var(--sub); margin-bottom: 6px; display: block; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 12px 14px;
+  border: 2px solid var(--border); border-radius: 12px;
+  font-family: inherit; font-size: 14px; color: var(--text);
+  background: var(--bg); outline: none; transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--coral); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-actions { display: flex; gap: 10px; }
+.form-actions .btn { flex: 1; padding: 13px; font-size: 14px; border-radius: 14px; }
+
+.range-wrap { display: flex; align-items: center; gap: 12px; }
+.range-wrap input[type=range] { flex: 1; accent-color: var(--coral); }
+.range-val { font-size: 16px; font-weight: 800; color: var(--coral); min-width: 36px; text-align: right; }
+
+/* ═══ EMPTY STATE ═══ */
+.empty {
+  text-align: center; padding: 40px 20px; color: var(--sub);
+}
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-text { font-size: 14px; font-weight: 500; }
+
+/* ═══ SWIPE DELETE (long press) ═══ */
+.delete-hint { font-size: 11px; color: var(--sub); text-align: center; margin-bottom: 8px; }
+
+/* ═══ SEARCH ═══ */
+.search-wrap { position: relative; margin-bottom: 14px; }
+.search-input {
+  width: 100%; padding: 11px 14px 11px 38px;
+  border: 2px solid var(--border); border-radius: 14px;
+  font-family: inherit; font-size: 13px; background: var(--card);
+  outline: none; color: var(--text); transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--coral); }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; }
+
+/* ═══ SECTION DIVIDER ═══ */
+.divider { display: flex; align-items: center; gap: 10px; margin: 16px 0 10px; }
+.divider span { font-size: 11px; font-weight: 700; color: var(--sub); white-space: nowrap; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ═══ SCROLL BAR ═══ */
+#content::-webkit-scrollbar { width: 3px; }
+#content::-webkit-scrollbar-track { background: transparent; }
+#content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Priority selector */
+.pri-btns { display: flex; gap: 8px; }
+.pri-btn { flex: 1; padding: 9px; border-radius: 10px; border: 2px solid var(--border); background: var(--bg); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; color: var(--sub); }
+.pri-btn.sel-高 { border-color: var(--coral); background: #FFE5E7; color: var(--coral); }
+.pri-btn.sel-中 { border-color: #E8A44A; background: #FFF4E0; color: #E8A44A; }
+.pri-btn.sel-低 { border-color: #4CAF72; background: #E5F5EC; color: #4CAF72; }
+
+/* Contact type selector */
+.type-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.type-btn { padding: 7px 13px; border-radius: 10px; border: 2px solid var(--border); background: var(--bg); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; color: var(--sub); }
+.type-btn.sel { border-color: var(--lavender); background: #EAE5F5; color: var(--lavender); }
+
+/* Install banner */
+#install-banner {
+  background: linear-gradient(135deg,var(--coral),var(--peach));
+  color: white; padding: 10px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; font-weight: 700;
+}
+#install-banner button { background: white; color: var(--coral); border: none; border-radius: 8px; padding: 5px 12px; font-family: inherit; font-weight: 800; font-size: 11px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Install Banner -->
+  <div id="install-banner" style="display:none">
+    📱 ホーム画面に追加してアプリとして使えます
+    <button id="install-btn">追加</button>
+  </div>
+
+  <!-- Header -->
+  <div id="header">
+    <div>
+      <div class="header-title">MyWorkHub</div>
+      <div class="header-date" id="hdate"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="icon-btn" id="search-toggle" title="検索" style="background:var(--bg);font-size:16px">🔍</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div id="content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="page active" id="page-dash">
+      <div class="stats-grid">
+        <div class="stat-card stat-coral">
+          <div class="stat-icon">📋</div>
+          <div class="stat-val" id="s-task-open">0</div>
+          <div class="stat-label">未完了タスク</div>
+        </div>
+        <div class="stat-card stat-mint">
+          <div class="stat-icon">✅</div>
+          <div class="stat-val" id="s-task-done">0</div>
+          <div class="stat-label">完了タスク</div>
+        </div>
+        <div class="stat-card stat-lavender">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-val" id="s-goals">0</div>
+          <div class="stat-label">進行中の目標</div>
+        </div>
+        <div class="stat-card stat-sky">
+          <div class="stat-icon">👥</div>
+          <div class="stat-val" id="s-contacts">0</div>
+          <div class="stat-label">人脈リスト</div>
+        </div>
+      </div>
+
+      <div class="divider"><span>📌 本日のタスク</span></div>
+      <div id="dash-today-tasks"></div>
+
+      <div class="divider"><span>🔔 フォローアップ要</span></div>
+      <div id="dash-followup"></div>
+
+      <div class="divider"><span>🎯 目標進捗</span></div>
+      <div id="dash-goals"></div>
+    </div>
+
+    <!-- ── TASKS ── -->
+    <div class="page" id="page-tasks">
+      <div class="sec-hd">
+        <div class="sec-title">📋 タスク</div>
+        <button class="fab" style="width:42px;height:42px;font-size:20px" onclick="openTaskModal()">＋</button>
+      </div>
+      <div class="chips" id="task-filter-chips">
+        <div class="chip active" data-f="all" onclick="filterTasks('all',this)">すべて</div>
+        <div class="chip" data-f="今日" onclick="filterTasks('今日',this)">📅 今日</div>
+        <div class="chip" data-f="未着手" onclick="filterTasks('未着手',this)">🔴 未着手</div>
+        <div class="chip" data-f="進行中" onclick="filterTasks('進行中',this)">🟡 進行中</div>
+        <div class="chip" data-f="完了" onclick="filterTasks('完了',this)">✅ 完了</div>
+        <div class="chip" data-f="高" onclick="filterTasks('高',this)">🔥 高優先</div>
+      </div>
+      <div id="task-list"></div>
+    </div>
+
+    <!-- ── GOALS ── -->
+    <div class="page" id="page-goals">
+      <div class="sec-hd">
+        <div class="sec-title">🎯 目標</div>
+        <button class="fab" style="width:42px;height:42px;font-size:20px" onclick="openGoalModal()">＋</button>
+      </div>
+      <div class="chips">
+        <div class="chip active" data-gf="all" onclick="filterGoals('all',this)">すべて</div>
+        <div class="chip" data-gf="進行中" onclick="filterGoals('進行中',this)">進行中</div>
+        <div class="chip" data-gf="完了" onclick="filterGoals('完了',this)">完了</div>
+      </div>
+      <div id="goal-list"></div>
+    </div>
+
+    <!-- ── NETWORK ── -->
+    <div class="page" id="page-network">
+      <div class="sec-hd">
+        <div class="sec-title">👥 人脈</div>
+        <button class="fab" style="width:42px;height:42px;font-size:20px" onclick="openContactModal()">＋</button>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" placeholder="名前・会社で検索..." id="contact-search" oninput="renderContacts()">
+      </div>
+      <div class="chips">
+        <div class="chip active" data-cf="all" onclick="filterContacts('all',this)">すべて</div>
+        <div class="chip" data-cf="顧客" onclick="filterContacts('顧客',this)">顧客</div>
+        <div class="chip" data-cf="パートナー" onclick="filterContacts('パートナー',this)">パートナー</div>
+        <div class="chip" data-cf="メンター" onclick="filterContacts('メンター',this)">メンター</div>
+        <div class="chip" data-cf="投資家" onclick="filterContacts('投資家',this)">投資家</div>
+        <div class="chip" data-cf="フォロー要" onclick="filterContacts('フォロー要',this)">🔔 フォロー要</div>
+      </div>
+      <div id="contact-list"></div>
+    </div>
+
+  </div>
+
+  <!-- Tabs -->
+  <div id="tabs">
+    <div class="tab active" onclick="switchTab('dash')">
+      <div class="tab-icon">🏠</div>
+      <span>ホーム</span>
+    </div>
+    <div class="tab" onclick="switchTab('tasks')">
+      <div class="tab-icon">📋</div>
+      <span>タスク</span>
+    </div>
+    <div class="tab" onclick="switchTab('goals')">
+      <div class="tab-icon">🎯</div>
+      <span>目標</span>
+    </div>
+    <div class="tab" onclick="switchTab('network')">
+      <div class="tab-icon">👥</div>
+      <span>人脈</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- Task Modal -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span id="task-modal-title">タスクを追加</span>
+      <button class="modal-close" onclick="closeModal('modal-task')">✕</button>
+    </div>
+    <input type="hidden" id="task-edit-id">
+    <div class="form-group">
+      <label class="form-label">タスク名 *</label>
+      <input class="form-input" id="t-name" placeholder="例：提案書を作成する">
+    </div>
+    <div class="form-group">
+      <label class="form-label">優先度</label>
+      <div class="pri-btns">
+        <button class="pri-btn" data-p="高" onclick="selPri('高',this)">🔥 高</button>
+        <button class="pri-btn" data-p="中" onclick="selPri('中',this)">🟡 中</button>
+        <button class="pri-btn" data-p="低" onclick="selPri('低',this)">🟢 低</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">ステータス</label>
+        <select class="form-select" id="t-status">
+          <option>未着手</option>
+          <option>進行中</option>
+          <option>完了</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">期限</label>
+        <input class="form-input" type="date" id="t-due">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <input class="form-input" id="t-cat" placeholder="例：営業・開発・管理">
+    </div>
+    <div class="form-group">
+      <label class="form-label">メモ</label>
+      <textarea class="form-textarea" id="t-memo" placeholder="詳細・備考..."></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-task')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveTask()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Goal Modal -->
+<div class="modal-overlay" id="modal-goal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span id="goal-modal-title">目標を追加</span>
+      <button class="modal-close" onclick="closeModal('modal-goal')">✕</button>
+    </div>
+    <input type="hidden" id="goal-edit-id">
+    <div class="form-group">
+      <label class="form-label">目標タイトル *</label>
+      <input class="form-input" id="g-title" placeholder="例：売上を前年比120%にする">
+    </div>
+    <div class="form-group">
+      <label class="form-label">詳細</label>
+      <textarea class="form-textarea" id="g-desc" placeholder="目標の背景・意義..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">期限</label>
+        <input class="form-input" type="date" id="g-due">
+      </div>
+      <div class="form-group">
+        <label class="form-label">カテゴリ</label>
+        <input class="form-input" id="g-cat" placeholder="例：営業・キャリア">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">進捗 <span id="g-prog-val" style="color:var(--coral);font-weight:800">0%</span></label>
+      <div class="range-wrap">
+        <input type="range" min="0" max="100" value="0" id="g-progress" oninput="document.getElementById('g-prog-val').textContent=this.value+'%'">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">マイルストーン（改行区切り）</label>
+      <textarea class="form-textarea" id="g-milestones" placeholder="例：&#10;Q1: 顧客リスト作成&#10;Q2: 提案書送付20件&#10;Q3: 成約5件"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-goal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveGoal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span id="contact-modal-title">人脈を追加</span>
+      <button class="modal-close" onclick="closeModal('modal-contact')">✕</button>
+    </div>
+    <input type="hidden" id="contact-edit-id">
+    <div class="form-group">
+      <label class="form-label">名前 *</label>
+      <input class="form-input" id="c-name" placeholder="例：田中 太郎">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">会社・組織</label>
+        <input class="form-input" id="c-company" placeholder="例：○○株式会社">
+      </div>
+      <div class="form-group">
+        <label class="form-label">役職</label>
+        <input class="form-input" id="c-role" placeholder="例：営業部長">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">関係タイプ</label>
+      <div class="type-btns" id="contact-type-btns">
+        <button class="type-btn" data-t="顧客" onclick="selType('顧客',this)">顧客</button>
+        <button class="type-btn" data-t="パートナー" onclick="selType('パートナー',this)">パートナー</button>
+        <button class="type-btn" data-t="メンター" onclick="selType('メンター',this)">メンター</button>
+        <button class="type-btn" data-t="投資家" onclick="selType('投資家',this)">投資家</button>
+        <button class="type-btn" data-t="同僚" onclick="selType('同僚',this)">同僚</button>
+        <button class="type-btn" data-t="その他" onclick="selType('その他',this)">その他</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">最終コンタクト</label>
+        <input class="form-input" type="date" id="c-last">
+      </div>
+      <div class="form-group">
+        <label class="form-label">次回フォロー</label>
+        <input class="form-input" type="date" id="c-follow">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">連絡先 (メール/電話)</label>
+      <input class="form-input" id="c-contact" placeholder="例：tanaka@example.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">メモ・関係性のポイント</label>
+      <textarea class="form-textarea" id="c-memo" placeholder="共通の話題、過去の経緯など..."></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-contact')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveContact()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal (Task) -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span>📋 タスク詳細</span>
+      <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
+    </div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- Goal Detail Modal -->
+<div class="modal-overlay" id="modal-goal-detail">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span>🎯 目標詳細</span>
+      <button class="modal-close" onclick="closeModal('modal-goal-detail')">✕</button>
+    </div>
+    <div id="goal-detail-content"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════ DATA ══════════════
+let tasks = JSON.parse(localStorage.getItem('mwh-tasks') || '[]');
+let goals = JSON.parse(localStorage.getItem('mwh-goals') || '[]');
+let contacts = JSON.parse(localStorage.getItem('mwh-contacts') || '[]');
+
+let taskFilter = 'all';
+let goalFilter = 'all';
+let contactFilter = 'all';
+let selectedPri = '中';
+let selectedType = '';
+let currentTab = 'dash';
+
+// ══════════════ UTILS ══════════════
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+const save = () => {
+  localStorage.setItem('mwh-tasks', JSON.stringify(tasks));
+  localStorage.setItem('mwh-goals', JSON.stringify(goals));
+  localStorage.setItem('mwh-contacts', JSON.stringify(contacts));
+};
+const today = () => new Date().toISOString().split('T')[0];
+const fmtDate = d => {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  const now = new Date(); now.setHours(0,0,0,0);
+  const diff = Math.round((dt - now) / 86400000);
+  if (diff === 0) return '今日';
+  if (diff === 1) return '明日';
+  if (diff === -1) return '昨日';
+  if (diff < 0) return `${-diff}日超過`;
+  if (diff < 8) return `${diff}日後`;
+  return dt.toLocaleDateString('ja-JP',{month:'short',day:'numeric'});
+};
+const isOverdue = d => d && d < today();
+const avatarIdx = name => name ? name.charCodeAt(0) % 5 : 0;
+const initial = name => name ? name[0] : '?';
+
+// ══════════════ DATE HEADER ══════════════
+(function(){
+  const d = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  document.getElementById('hdate').textContent =
+    `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+})();
+
+// ══════════════ TAB SWITCH ══════════════
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  const idx = ['dash','tasks','goals','network'].indexOf(tab);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  if (tab === 'dash') renderDash();
+  if (tab === 'tasks') renderTasks();
+  if (tab === 'goals') renderGoals();
+  if (tab === 'network') renderContacts();
+  document.getElementById('content').scrollTop = 0;
+}
+
+// ══════════════ MODAL ══════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ══════════════ TASK MODAL ══════════════
+function openTaskModal(id) {
+  selectedPri = '中';
+  document.getElementById('task-edit-id').value = id || '';
+  document.getElementById('task-modal-title').textContent = id ? 'タスクを編集' : 'タスクを追加';
+  if (id) {
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('t-name').value = t.name;
+    document.getElementById('t-status').value = t.status;
+    document.getElementById('t-due').value = t.due || '';
+    document.getElementById('t-cat').value = t.cat || '';
+    document.getElementById('t-memo').value = t.memo || '';
+    selectedPri = t.priority;
+  } else {
+    document.getElementById('t-name').value = '';
+    document.getElementById('t-status').value = '未着手';
+    document.getElementById('t-due').value = '';
+    document.getElementById('t-cat').value = '';
+    document.getElementById('t-memo').value = '';
+  }
+  document.querySelectorAll('.pri-btn').forEach(b => {
+    b.className = 'pri-btn' + (b.dataset.p === selectedPri ? ' sel-'+selectedPri : '');
+  });
+  openModal('modal-task');
+}
+
+function selPri(p, el) {
+  selectedPri = p;
+  document.querySelectorAll('.pri-btn').forEach(b => {
+    b.className = 'pri-btn' + (b.dataset.p === p ? ' sel-'+p : '');
+  });
+}
+
+function saveTask() {
+  const name = document.getElementById('t-name').value.trim();
+  if (!name) { alert('タスク名を入力してください'); return; }
+  const id = document.getElementById('task-edit-id').value;
+  const obj = {
+    id: id || uid(),
+    name,
+    priority: selectedPri,
+    status: document.getElementById('t-status').value,
+    due: document.getElementById('t-due').value,
+    cat: document.getElementById('t-cat').value.trim(),
+    memo: document.getElementById('t-memo').value.trim(),
+    created: id ? undefined : today(),
+  };
+  if (id) { const i = tasks.findIndex(x=>x.id===id); if(i>-1){obj.created=tasks[i].created;tasks[i]=obj;} }
+  else tasks.unshift(obj);
+  save(); closeModal('modal-task'); renderTasks(); renderDash();
+}
+
+function deleteTask(id) {
+  if (!confirm('このタスクを削除しますか？')) return;
+  tasks = tasks.filter(x => x.id !== id);
+  save(); renderTasks(); renderDash();
+}
+
+function toggleTask(id) {
+  const t = tasks.find(x=>x.id===id);
+  if (!t) return;
+  t.status = t.status === '完了' ? '未着手' : '完了';
+  save(); renderTasks(); renderDash();
+}
+
+function filterTasks(f, el) {
+  taskFilter = f;
+  document.querySelectorAll('#task-filter-chips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks() {
+  const el = document.getElementById('task-list');
+  let list = [...tasks];
+  if (taskFilter === '今日') list = list.filter(t => t.due === today());
+  else if (taskFilter === 'all') { /* all */ }
+  else if (['未着手','進行中','完了'].includes(taskFilter)) list = list.filter(t => t.status === taskFilter);
+  else if (taskFilter === '高') list = list.filter(t => t.priority === '高');
+  if (!list.length) { el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">タスクはありません</div></div>`; return; }
+  // Sort: incomplete first, then by priority
+  const pri = {高:0,中:1,低:2};
+  list.sort((a,b) => {
+    if (a.status==='完了' && b.status!=='完了') return 1;
+    if (a.status!=='完了' && b.status==='完了') return -1;
+    return (pri[a.priority]||1)-(pri[b.priority]||1);
+  });
+  el.innerHTML = list.map(t => taskHTML(t)).join('');
+}
+
+function taskHTML(t) {
+  const done = t.status === '完了';
+  const overdue = !done && isOverdue(t.due);
+  return `<div class="task-item pri-${t.priority} ${done?'done':''}" onclick="showTaskDetail('${t.id}')">
+    <div class="task-check ${done?'checked':''}" onclick="event.stopPropagation();toggleTask('${t.id}')">
+      ${done?'✓':''}
+    </div>
+    <div class="task-body">
+      <div class="task-name">${t.name}</div>
+      <div class="task-meta">
+        <span class="tag tag-pri-${t.priority}">${t.priority}</span>
+        <span class="tag tag-status">${t.status}</span>
+        ${t.due?`<span class="tag tag-date" style="${overdue?'color:var(--coral);background:#FFE5E7;font-weight:700':''}">${fmtDate(t.due)}</span>`:''}
+        ${t.cat?`<span class="tag tag-cat">${t.cat}</span>`:''}
+      </div>
+    </div>
+    <div class="task-actions" onclick="event.stopPropagation()">
+      <button class="icon-btn" onclick="openTaskModal('${t.id}')">✏️</button>
+      <button class="icon-btn" onclick="deleteTask('${t.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+
+function showTaskDetail(id) {
+  const t = tasks.find(x=>x.id===id);
+  if (!t) return;
+  document.getElementById('detail-content').innerHTML = `
+    <div class="form-group">
+      <div style="font-size:18px;font-weight:800;margin-bottom:8px">${t.name}</div>
+      <div class="task-meta" style="margin-bottom:12px">
+        <span class="tag tag-pri-${t.priority}">${t.priority}</span>
+        <span class="tag tag-status">${t.status}</span>
+        ${t.due?`<span class="tag tag-date">${t.due} (${fmtDate(t.due)})</span>`:''}
+        ${t.cat?`<span class="tag tag-cat">${t.cat}</span>`:''}
+      </div>
+      ${t.memo?`<div style="background:var(--bg);border-radius:10px;padding:12px;font-size:13px;color:var(--sub)">${t.memo.replace(/\n/g,'<br>')}</div>`:''}
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-detail')">閉じる</button>
+      <button class="btn btn-primary btn-sm" onclick="closeModal('modal-detail');openTaskModal('${id}')">編集</button>
+    </div>`;
+  openModal('modal-detail');
+}
+
+// ══════════════ GOAL MODAL ══════════════
+function openGoalModal(id) {
+  document.getElementById('goal-edit-id').value = id || '';
+  document.getElementById('goal-modal-title').textContent = id ? '目標を編集' : '目標を追加';
+  if (id) {
+    const g = goals.find(x=>x.id===id);
+    if (!g) return;
+    document.getElementById('g-title').value = g.title;
+    document.getElementById('g-desc').value = g.desc || '';
+    document.getElementById('g-due').value = g.due || '';
+    document.getElementById('g-cat').value = g.cat || '';
+    document.getElementById('g-progress').value = g.progress || 0;
+    document.getElementById('g-prog-val').textContent = (g.progress||0)+'%';
+    document.getElementById('g-milestones').value = (g.milestones||[]).map(m=>m.text).join('\n');
+  } else {
+    ['g-title','g-desc','g-due','g-cat','g-milestones'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('g-progress').value = 0;
+    document.getElementById('g-prog-val').textContent = '0%';
+  }
+  openModal('modal-goal');
+}
+
+function saveGoal() {
+  const title = document.getElementById('g-title').value.trim();
+  if (!title) { alert('目標タイトルを入力してください'); return; }
+  const id = document.getElementById('goal-edit-id').value;
+  const msText = document.getElementById('g-milestones').value;
+  let milestones;
+  if (id) {
+    const existing = goals.find(x=>x.id===id);
+    const newMsTexts = msText.split('\n').map(s=>s.trim()).filter(Boolean);
+    milestones = newMsTexts.map(text => {
+      const found = (existing?.milestones||[]).find(m=>m.text===text);
+      return found || {text, done: false};
+    });
+  } else {
+    milestones = msText.split('\n').map(s=>s.trim()).filter(Boolean).map(text=>({text,done:false}));
+  }
+  const obj = {
+    id: id || uid(),
+    title,
+    desc: document.getElementById('g-desc').value.trim(),
+    due: document.getElementById('g-due').value,
+    cat: document.getElementById('g-cat').value.trim(),
+    progress: parseInt(document.getElementById('g-progress').value),
+    milestones,
+    status: parseInt(document.getElementById('g-progress').value) >= 100 ? '完了' : '進行中',
+    created: id ? undefined : today(),
+  };
+  if (id) { const i = goals.findIndex(x=>x.id===id); if(i>-1){obj.created=goals[i].created;goals[i]=obj;} }
+  else goals.unshift(obj);
+  save(); closeModal('modal-goal'); renderGoals(); renderDash();
+}
+
+function deleteGoal(id) {
+  if (!confirm('この目標を削除しますか？')) return;
+  goals = goals.filter(x=>x.id!==id);
+  save(); renderGoals(); renderDash();
+}
+
+function toggleMilestone(gid, idx) {
+  const g = goals.find(x=>x.id===gid);
+  if (!g || !g.milestones[idx]) return;
+  g.milestones[idx].done = !g.milestones[idx].done;
+  const doneCount = g.milestones.filter(m=>m.done).length;
+  if (g.milestones.length > 0) {
+    g.progress = Math.round(doneCount / g.milestones.length * 100);
+    g.status = g.progress >= 100 ? '完了' : '進行中';
+  }
+  save(); renderGoals(); renderDash();
+}
+
+function filterGoals(f, el) {
+  goalFilter = f;
+  document.querySelectorAll('#page-goals .chips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderGoals();
+}
+
+function renderGoals() {
+  const el = document.getElementById('goal-list');
+  let list = [...goals];
+  if (goalFilter !== 'all') list = list.filter(g=>g.status===goalFilter);
+  if (!list.length) { el.innerHTML = `<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">目標を追加しましょう</div></div>`; return; }
+  el.innerHTML = list.map((g,i) => goalHTML(g,i)).join('');
+}
+
+function goalHTML(g, colorIdx) {
+  const ci = colorIdx % 5;
+  const ms = g.milestones || [];
+  return `<div class="goal-card goal-color-${ci}">
+    <div class="goal-header">
+      <div>
+        <div class="goal-title">${g.title}</div>
+        <div class="goal-meta">
+          ${g.cat?`<span class="tag tag-cat" style="margin-right:4px">${g.cat}</span>`:''}
+          ${g.due?`📅 ${g.due} (${fmtDate(g.due)})`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="icon-btn" onclick="openGoalModal('${g.id}')">✏️</button>
+        <button class="icon-btn" onclick="deleteGoal('${g.id}')">🗑</button>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>進捗</span><span style="color:var(--coral)">${g.progress||0}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${g.progress||0}%"></div></div>
+    </div>
+    ${g.desc?`<div style="font-size:12px;color:var(--sub);margin-bottom:8px">${g.desc}</div>`:''}
+    ${ms.length?`<div class="milestones">
+      <div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:6px">マイルストーン</div>
+      ${ms.map((m,i)=>`<div class="milestone-item" onclick="toggleMilestone('${g.id}',${i})">
+        <div class="milestone-dot ${m.done?'done':''}"></div>
+        <span class="milestone-text ${m.done?'done':''}">${m.text}</span>
+      </div>`).join('')}
+    </div>`:''}
+  </div>`;
+}
+
+// ══════════════ CONTACT MODAL ══════════════
+function openContactModal(id) {
+  selectedType = '';
+  document.getElementById('contact-edit-id').value = id || '';
+  document.getElementById('contact-modal-title').textContent = id ? '人脈を編集' : '人脈を追加';
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('sel'));
+  if (id) {
+    const c = contacts.find(x=>x.id===id);
+    if (!c) return;
+    document.getElementById('c-name').value = c.name;
+    document.getElementById('c-company').value = c.company||'';
+    document.getElementById('c-role').value = c.role||'';
+    document.getElementById('c-last').value = c.last||'';
+    document.getElementById('c-follow').value = c.follow||'';
+    document.getElementById('c-contact').value = c.contact||'';
+    document.getElementById('c-memo').value = c.memo||'';
+    selectedType = c.type||'';
+    if (selectedType) {
+      const b = document.querySelector(`.type-btn[data-t="${selectedType}"]`);
+      if (b) b.classList.add('sel');
+    }
+  } else {
+    ['c-name','c-company','c-role','c-last','c-follow','c-contact','c-memo'].forEach(id=>document.getElementById(id).value='');
+  }
+  openModal('modal-contact');
+}
+
+function selType(t, el) {
+  selectedType = t;
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function saveContact() {
+  const name = document.getElementById('c-name').value.trim();
+  if (!name) { alert('名前を入力してください'); return; }
+  const id = document.getElementById('contact-edit-id').value;
+  const obj = {
+    id: id || uid(),
+    name,
+    company: document.getElementById('c-company').value.trim(),
+    role: document.getElementById('c-role').value.trim(),
+    type: selectedType,
+    last: document.getElementById('c-last').value,
+    follow: document.getElementById('c-follow').value,
+    contact: document.getElementById('c-contact').value.trim(),
+    memo: document.getElementById('c-memo').value.trim(),
+  };
+  if (id) { const i = contacts.findIndex(x=>x.id===id); if(i>-1) contacts[i]=obj; }
+  else contacts.unshift(obj);
+  save(); closeModal('modal-contact'); renderContacts(); renderDash();
+}
+
+function deleteContact(id) {
+  if (!confirm('この人脈を削除しますか？')) return;
+  contacts = contacts.filter(x=>x.id!==id);
+  save(); renderContacts(); renderDash();
+}
+
+function filterContacts(f, el) {
+  contactFilter = f;
+  document.querySelectorAll('#page-network .chips .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderContacts();
+}
+
+function renderContacts() {
+  const el = document.getElementById('contact-list');
+  const q = document.getElementById('contact-search').value.trim().toLowerCase();
+  let list = [...contacts];
+  if (q) list = list.filter(c =>
+    c.name.toLowerCase().includes(q) ||
+    (c.company||'').toLowerCase().includes(q) ||
+    (c.role||'').toLowerCase().includes(q)
+  );
+  if (contactFilter !== 'all') {
+    if (contactFilter === 'フォロー要') list = list.filter(c => c.follow && c.follow <= today());
+    else list = list.filter(c => c.type === contactFilter);
+  }
+  if (!list.length) { el.innerHTML = `<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">人脈を追加しましょう</div></div>`; return; }
+  el.innerHTML = list.map(c => contactHTML(c)).join('');
+}
+
+function contactHTML(c) {
+  const ai = avatarIdx(c.name);
+  const needFollow = c.follow && c.follow <= today();
+  const lastDays = c.last ? Math.round((new Date() - new Date(c.last+'T00:00:00')) / 86400000) : null;
+  return `<div class="contact-card">
+    <div class="contact-avatar avatar-${ai}">${initial(c.name)}</div>
+    <div class="contact-body">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+        <div class="contact-name">${c.name}</div>
+        ${needFollow?`<span class="follow-badge">🔔 フォロー</span>`:''}
+      </div>
+      <div class="contact-role">${[c.role, c.company].filter(Boolean).join(' / ')}</div>
+      <div class="contact-tags">
+        ${c.type?`<span class="tag" style="background:#EAE5F5;color:var(--lavender)">${c.type}</span>`:''}
+      </div>
+      ${lastDays!==null?`<div class="contact-last">最終コンタクト: <span>${lastDays===0?'今日':lastDays+'日前'}</span></div>`:''}
+      ${c.follow?`<div style="font-size:11px;color:var(--sub)">次回フォロー: <span style="${needFollow?'color:var(--coral);font-weight:700':''}">${fmtDate(c.follow)}</span></div>`:''}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+      <button class="icon-btn" onclick="openContactModal('${c.id}')">✏️</button>
+      <button class="icon-btn" onclick="deleteContact('${c.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+
+// ══════════════ DASHBOARD ══════════════
+function renderDash() {
+  const openTasks = tasks.filter(t=>t.status!=='完了');
+  const doneTasks = tasks.filter(t=>t.status==='完了');
+  document.getElementById('s-task-open').textContent = openTasks.length;
+  document.getElementById('s-task-done').textContent = doneTasks.length;
+  document.getElementById('s-goals').textContent = goals.filter(g=>g.status!=='完了').length;
+  document.getElementById('s-contacts').textContent = contacts.length;
+
+  // Today's tasks
+  const todayTasks = tasks.filter(t => t.due === today() && t.status !== '完了');
+  const dtt = document.getElementById('dash-today-tasks');
+  if (!todayTasks.length) {
+    dtt.innerHTML = `<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px">今日のタスクはありません 🎉</div>`;
+  } else {
+    dtt.innerHTML = todayTasks.slice(0,5).map(t => taskHTML(t)).join('');
+  }
+
+  // Follow-up contacts
+  const followUp = contacts.filter(c => c.follow && c.follow <= today());
+  const dfu = document.getElementById('dash-followup');
+  if (!followUp.length) {
+    dfu.innerHTML = `<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px">フォローアップなし ✅</div>`;
+  } else {
+    dfu.innerHTML = followUp.slice(0,3).map(c => contactHTML(c)).join('');
+  }
+
+  // Goals
+  const dg = document.getElementById('dash-goals');
+  const activeGoals = goals.filter(g=>g.status!=='完了').slice(0,3);
+  if (!activeGoals.length) {
+    dg.innerHTML = `<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px">目標を追加しましょう 🎯</div>`;
+  } else {
+    dg.innerHTML = activeGoals.map((g,i) => goalHTML(g,i)).join('');
+  }
+}
+
+// ══════════════ PWA ══════════════
+const ICON_192 = 'data:image/png;base64,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';
+const ICON_512 = 'data:image/png;base64,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';
+document.getElementById('apple-icon').href = ICON_192;
+const manifest = {
+  name: 'MyWorkHub',
+  short_name: 'WorkHub',
+  start_url: '.',
+  display: 'standalone',
+  background_color: '#FFF8F5',
+  theme_color: '#FF8B94',
+  icons: [
+    {src: ICON_192, sizes: '192x192', type: 'image/png', purpose: 'any maskable'},
+    {src: ICON_512, sizes: '512x512', type: 'image/png', purpose: 'any maskable'},
+  ]
+};
+const mBlob = new Blob([JSON.stringify(manifest)], {type: 'application/manifest+json'});
+document.getElementById('manifest-link').href = URL.createObjectURL(mBlob);
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+document.getElementById('install-btn').addEventListener('click', () => {
+  if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; document.getElementById('install-banner').style.display='none'; }
+});
+
+// ══════════════ SAMPLE DATA ══════════════
+function addSamples() {
+  if (tasks.length || goals.length || contacts.length) return;
+  const t = today();
+  tasks = [
+    {id:uid(), name:'Q2提案書を仕上げる', priority:'高', status:'進行中', due:t, cat:'営業', memo:'クライアント向けの提案資料。金曜までに送付が必要', created:t},
+    {id:uid(), name:'週次MTGのアジェンダ作成', priority:'中', status:'未着手', due:t, cat:'管理', memo:'', created:t},
+    {id:uid(), name:'市場調査レポート確認', priority:'低', status:'未着手', due:'', cat:'リサーチ', memo:'', created:t},
+  ];
+  goals = [
+    {id:uid(), title:'今期売上目標120%達成', desc:'前年比20%増を目指す。新規顧客開拓が鍵', due:'2025-12-31', cat:'営業', progress:35, milestones:[
+      {text:'Q1 既存顧客アップセル+10%', done:true},
+      {text:'Q2 新規顧客5社獲得', done:false},
+      {text:'Q3 リピート率80%達成', done:false},
+      {text:'Q4 目標達成確認', done:false},
+    ], status:'進行中', created:t},
+    {id:uid(), title:'マネージャーへの昇進', desc:'来期の人事評価で昇格を目指す', due:'2025-09-30', cat:'キャリア', progress:20, milestones:[
+      {text:'リーダーシップ研修受講', done:true},
+      {text:'プロジェクト責任者として実績を作る', done:false},
+      {text:'上長への面談でキャリア希望を伝える', done:false},
+    ], status:'進行中', created:t},
+  ];
+  contacts = [
+    {id:uid(), name:'田中 誠', company:'ABCコーポレーション', role:'営業部長', type:'顧客', last:'2025-03-15', follow:t, contact:'tanaka@abc.co.jp', memo:'ゴルフが趣味。子供2人。Q3予算は余裕あり'},
+    {id:uid(), name:'山田 花子', company:'XYZベンチャーズ', role:'パートナー', type:'投資家', last:'2025-02-28', follow:'2025-05-01', contact:'hanako@xyz.vc', memo:'SaaS分野に強い関心。月次で情報交換'},
+    {id:uid(), name:'鈴木 健', company:'テックスタートアップ', role:'CTO', type:'パートナー', last:'2025-03-01', follow:'', contact:'ken@techstartup.jp', memo:'API連携の件で相談中'},
+  ];
+  save();
+}
+addSamples();
+renderDash();
+
+// close modal on overlay click is already set
+// prevent body scroll when modal is open
+document.addEventListener('touchmove', e => {
+  const overlay = e.target.closest('.modal-overlay');
+  if (overlay && !e.target.closest('.modal-box')) e.preventDefault();
+}, {passive: false});
+</script>
+</body>
+</html>
