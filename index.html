@@ -382,6 +382,16 @@ body {
 .pri-btn.sel-中 { border-color: #E8A44A; background: #FFF4E0; color: #E8A44A; }
 .pri-btn.sel-低 { border-color: #4CAF72; background: #E5F5EC; color: #4CAF72; }
 
+/* Importance selector */
+.imp-btns { display: flex; gap: 8px; }
+.imp-btn { flex: 1; padding: 9px; border-radius: 10px; border: 2px solid var(--border); background: var(--bg); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; color: var(--sub); }
+.imp-btn.sel-高 { border-color: #5C6BC0; background: #E8EAF6; color: #5C6BC0; }
+.imp-btn.sel-中 { border-color: #26A69A; background: #E0F2F1; color: #26A69A; }
+.imp-btn.sel-低 { border-color: #90A4AE; background: #ECEFF1; color: #78909C; }
+.tag-imp-高 { background: #E8EAF6; color: #5C6BC0; }
+.tag-imp-中 { background: #E0F2F1; color: #26A69A; }
+.tag-imp-低 { background: #ECEFF1; color: #78909C; }
+
 /* Contact type selector */
 .type-btns { display: flex; gap: 6px; flex-wrap: wrap; }
 .type-btn { padding: 7px 13px; border-radius: 10px; border: 2px solid var(--border); background: var(--bg); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; color: var(--sub); }
@@ -675,11 +685,19 @@ body {
       <input class="form-input" id="t-name" placeholder="例：提案書を作成する">
     </div>
     <div class="form-group">
-      <label class="form-label">優先度</label>
+      <label class="form-label">優先度（緊急度）</label>
       <div class="pri-btns">
         <button class="pri-btn" data-p="高" onclick="selPri('高',this)">🔥 高</button>
         <button class="pri-btn" data-p="中" onclick="selPri('中',this)">🟡 中</button>
         <button class="pri-btn" data-p="低" onclick="selPri('低',this)">🟢 低</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">重要度</label>
+      <div class="imp-btns">
+        <button class="imp-btn" data-i="高" onclick="selImp('高',this)">⭐ 高</button>
+        <button class="imp-btn" data-i="中" onclick="selImp('中',this)">🔵 中</button>
+        <button class="imp-btn" data-i="低" onclick="selImp('低',this)">⬜ 低</button>
       </div>
     </div>
     <div class="form-row">
@@ -844,6 +862,7 @@ let taskFilter = 'all';
 let goalFilter = 'all';
 let contactFilter = 'all';
 let selectedPri = '中';
+let selectedImp = '中';
 let selectedType = '';
 let currentTab = 'dash';
 
@@ -920,6 +939,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 // ══════════════ TASK MODAL ══════════════
 function openTaskModal(id) {
   selectedPri = '中';
+  selectedImp = '中';
   document.getElementById('task-edit-id').value = id || '';
   document.getElementById('task-modal-title').textContent = id ? 'タスクを編集' : 'タスクを追加';
   if (id) {
@@ -931,6 +951,7 @@ function openTaskModal(id) {
     document.getElementById('t-cat').value = t.cat || '';
     document.getElementById('t-memo').value = t.memo || '';
     selectedPri = t.priority;
+    selectedImp = t.importance || '中';
   } else {
     document.getElementById('t-name').value = '';
     document.getElementById('t-status').value = '未着手';
@@ -940,6 +961,9 @@ function openTaskModal(id) {
   }
   document.querySelectorAll('.pri-btn').forEach(b => {
     b.className = 'pri-btn' + (b.dataset.p === selectedPri ? ' sel-'+selectedPri : '');
+  });
+  document.querySelectorAll('.imp-btn').forEach(b => {
+    b.className = 'imp-btn' + (b.dataset.i === selectedImp ? ' sel-'+selectedImp : '');
   });
   openModal('modal-task');
 }
@@ -951,6 +975,13 @@ function selPri(p, el) {
   });
 }
 
+function selImp(i, el) {
+  selectedImp = i;
+  document.querySelectorAll('.imp-btn').forEach(b => {
+    b.className = 'imp-btn' + (b.dataset.i === i ? ' sel-'+i : '');
+  });
+}
+
 function saveTask() {
   const name = document.getElementById('t-name').value.trim();
   if (!name) { alert('タスク名を入力してください'); return; }
@@ -959,6 +990,7 @@ function saveTask() {
     id: id || uid(),
     name,
     priority: selectedPri,
+    importance: selectedImp,
     status: document.getElementById('t-status').value,
     due: document.getElementById('t-due').value,
     cat: document.getElementById('t-cat').value.trim(),
@@ -1019,6 +1051,7 @@ function taskHTML(t) {
       <div class="task-name">${t.name}</div>
       <div class="task-meta">
         <span class="tag tag-pri-${t.priority}">${t.priority}</span>
+        ${t.importance?`<span class="tag tag-imp-${t.importance}">重${t.importance}</span>`:''}
         <span class="tag tag-status">${t.status}</span>
         ${t.due?`<span class="tag tag-date" style="${overdue?'color:var(--coral);background:#FFE5E7;font-weight:700':''}">${fmtDate(t.due)}</span>`:''}
         ${t.cat?`<span class="tag tag-cat">${t.cat}</span>`:''}
@@ -1288,8 +1321,14 @@ function renderDash() {
   document.getElementById('s-goals').textContent = goals.filter(g=>g.status!=='完了').length;
   document.getElementById('s-contacts').textContent = contacts.length;
 
-  // Today's tasks
-  const todayTasks = tasks.filter(t => t.due === today() && t.status !== '完了');
+  // Today's tasks: 期限が今日・期限切れ・または今日作成で期限なし
+  const todayTasks = tasks.filter(t =>
+    t.status !== '完了' && (
+      t.due === today() ||
+      (t.due && t.due < today()) ||
+      (!t.due && t.created === today())
+    )
+  );
   const dtt = document.getElementById('dash-today-tasks');
   if (!todayTasks.length) {
     dtt.innerHTML = `<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px">今日のタスクはありません 🎉</div>`;
